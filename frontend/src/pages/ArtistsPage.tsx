@@ -99,7 +99,7 @@ export function ArtistsPage() {
                       {artist.production_house && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{artist.production_house.name}</span>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      @{artist.user.username} · {artist.songs.length} songs
+                      @{artist.user?.username} · {artist.songs?.length || 0} songs
                     </p>
                   </div>
                 </CardContent>
@@ -121,7 +121,7 @@ export function ArtistsPage() {
                   </Avatar>
                   <div>
                     <h2 className="text-xl font-bold">{selected.name}</h2>
-                    <p className="text-sm text-muted-foreground">@{selected.user.username}</p>
+                    <p className="text-sm text-muted-foreground">@{selected.user?.username}</p>
                     <div className="flex gap-2 mt-1 flex-wrap">
                       {selected.is_band && <Badge variant="secondary">Band</Badge>}
                       {selected.country && <Badge variant="outline">{selected.country}</Badge>}
@@ -148,22 +148,23 @@ export function ArtistsPage() {
 
                 <div>
                   <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <Music2 className="h-4 w-4" /> Songs ({selected.songs.length})
+                    <Music2 className="h-4 w-4" /> Songs ({selected.songs?.length || 0})
                   </h3>
                   <div className="space-y-2">
-                    {selected.songs.length === 0 ? (
+                    {!selected.songs || selected.songs.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No songs yet.</p>
                     ) : (
                       selected.songs.map(({ song }) => (
-                        <div key={song.song_id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                        <div key={song?.song_id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{song.song_name}</p>
+                            <p className="text-sm font-medium truncate">{song?.song_name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDate(song.publish_date)} · {(song.genres as string[]).join(', ')}
+                              {song?.publish_date ? formatDate(song.publish_date) : 'Unknown date'}
+                              {Array.isArray(song?.genres) && song.genres.length > 0 ? ` · ${(song.genres as string[]).join(', ')}` : ''}
                             </p>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1 ml-3 flex-shrink-0">
-                            <Clock className="h-3 w-3" /> {formatDuration(song.duration)}
+                            <Clock className="h-3 w-3" /> {formatDuration(song?.duration || 0)}
                           </span>
                         </div>
                       ))

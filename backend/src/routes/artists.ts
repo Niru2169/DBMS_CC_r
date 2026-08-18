@@ -16,6 +16,11 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
       include: {
         user: { select: { user_id: true, username: true } },
         production_house: true,
+        songs: {
+          include: {
+            song: true,
+          },
+        },
       },
       orderBy: { name: 'asc' },
       take: 50,
