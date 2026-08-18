@@ -23,7 +23,13 @@ docker-compose up --build
 Services will start at:
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:3001
-- **MySQL:** localhost:3306
+- **MySQL:** localhost:3307 (Note: Changed from 3306 to 3307 to avoid local MySQL conflicts)
+
+> [!NOTE]  
+> If you encounter a `ports are not available` error (e.g. `bind: Only one usage of each socket address is normally permitted`), it means a local service is already using that port. You can change the port mapping in `docker-compose.yml` (e.g., `"3307:3306"` for MySQL or `"3002:3001"` for backend).
+
+### 📖 Deployment Guides
+For detailed instructions on how to deploy this project from scratch on Windows or a fresh Linux VM, please see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Demo Accounts
 
