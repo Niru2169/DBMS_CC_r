@@ -28,7 +28,6 @@
 *   country (String, Indexed)
 *   is_band (Boolean)
 *   band_member_ids (JSON/Array, Nullable)
-*   band_member_ids (JSON/Array, Nullable)
 *   country_of_origin (String, Nullable)
 *   production_house_id (Foreign Key -> Production_House)
 *   created_at (Timestamp)
