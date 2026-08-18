@@ -51,7 +51,7 @@ The refined schema achieves a high level of data integrity, targeting Third Norm
 | `country` | VARCHAR | INDEX | Artist's country. |
 | `is_band` | BOOLEAN | NOT NULL | Indicates if the artist is a band. |
 | `n_of_listeners` | INT | NOT NULL | Total number of listeners for the artist. |
-| `n_of_members` | INT | NULLABLE | Number of band members. |
+| `band_member_ids` | JSON/Array | NULLABLE | IDs of band members (JSON/Array). |
 | `country_of_origin` | VARCHAR | NULLABLE | Artist's country of origin. |
 | `production_house_id` | INT | FK (Production_House) | Production house associated with the artist. |
 | `created_at` | TIMESTAMP | NOT NULL | Artist creation timestamp. |

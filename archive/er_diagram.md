@@ -68,7 +68,8 @@ flowchart LR
     A_A6(["created_at"]):::attribute
     A_A_BAND(["Band Details"]):::attribute
     A_A_B1(["is_band"]):::comp
-    A_A_B2(["n_of_members"]):::comp
+    A_A_B_MEM_IDS(["band_member_ids"]):::collection
+
 
     E_ARTIST --- A_A1
     E_ARTIST --- A_A2
@@ -177,11 +178,12 @@ erDiagram
         string country
         boolean is_band
         int n_of_listeners
-        int n_of_members
+        jsonb band_member_ids
         string country_of_origin
         int production_house_id FK
         datetime created_at
     }
+
 
     SONG {
         int song_id PK
