@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# setup-vm.sh — MusicLib VM Setup Script (Ubuntu 22.04 / 24.04)
+# setup-vm.sh — MusicLib VM Setup Script (Debian 12 / Ubuntu 22.04 / 24.04)
 # Run as a non-root user with sudo privileges.
 # Usage: bash setup-vm.sh [--repo <git-repo-url>]
 #        bash setup-vm.sh --skip-clone   (if repo is already cloned)
@@ -29,21 +29,26 @@ done
 # ── 1. System update ─────────────────────────────────────────────────────────
 info "Updating system packages..."
 sudo apt-get update -y
-sudo apt-get upgrade -y --exclude=google-chrome-stable  # GCP VMs have chrome repo pre-added
+sudo apt-get upgrade -y -o Dir::Etc::SourceList=/dev/null -o APT::Get::List-Cleanup=false google-chrome-stable 2>/dev/null || sudo apt-get upgrade -y  # skip chrome upgrade on GCP/Azure VMs
 sudo apt-get install -y ca-certificates curl gnupg git ufw
 
 # ── 2. Install Docker Engine ──────────────────────────────────────────────────
 info "Installing Docker Engine..."
 sudo install -m 0755 -d /etc/apt/keyrings
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+# Auto-detect OS (Debian vs Ubuntu) for correct Docker repo
+OS_ID=$(. /etc/os-release && echo "${ID}")
+OS_CODENAME=$(. /etc/os-release && echo "${VERSION_CODENAME}")
+info "Detected OS: ${OS_ID} ${OS_CODENAME}"
+
+curl -fsSL https://download.docker.com/linux/${OS_ID}/gpg \
   | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-  https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  https://download.docker.com/linux/${OS_ID} \
+  ${OS_CODENAME} stable" \
   | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update -y
