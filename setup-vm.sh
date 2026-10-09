@@ -29,7 +29,7 @@ done
 # ── 1. System update ─────────────────────────────────────────────────────────
 info "Updating system packages..."
 sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt-get upgrade -y --exclude=google-chrome-stable  # GCP VMs have chrome repo pre-added
 sudo apt-get install -y ca-certificates curl gnupg git ufw
 
 # ── 2. Install Docker Engine ──────────────────────────────────────────────────
