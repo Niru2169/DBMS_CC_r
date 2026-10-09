@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/toaster';
 import { ListMusic, Plus, Trash2, ExternalLink, Clock } from 'lucide-react';
 
@@ -37,6 +38,9 @@ export function PlaylistsPage() {
   const [newCoverUrl, setNewCoverUrl] = useState('');
   const [newReleaseType, setNewReleaseType] = useState<string>('');
   const [creating, setCreating] = useState(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchPlaylists = () => {
     api.get('/playlists').then((r) => setPlaylists(r.data)).finally(() => setLoading(false));
@@ -66,14 +70,18 @@ export function PlaylistsPage() {
     }
   };
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await api.delete(`/playlists/${id}`);
-      toast({ title: 'Deleted', description: `"${name}" removed` });
+      await api.delete(`/playlists/${deleteTarget.id}`);
+      toast({ title: 'Deleted', description: `"${deleteTarget.name}" removed` });
+      setDeleteTarget(null);
       fetchPlaylists();
     } catch {
       toast({ title: 'Error', description: 'Could not delete playlist', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -188,7 +196,7 @@ export function PlaylistsPage() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(pl.playlist_id, pl.name)}
+                      onClick={() => setDeleteTarget({ id: pl.playlist_id, name: pl.name })}
                       title="Delete playlist"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -200,6 +208,17 @@ export function PlaylistsPage() {
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Playlist"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

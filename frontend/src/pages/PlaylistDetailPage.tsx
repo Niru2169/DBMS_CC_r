@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/toaster';
 import { getInitials } from '@/lib/utils';
 import {
@@ -125,14 +126,23 @@ export function PlaylistDetailPage() {
     }
   };
 
-  const removeSong = async (songId: number, songName: string) => {
-    if (!confirm(`Remove "${songName}" from playlist?`)) return;
+  // Dialog confirmation states
+  const [songToRemove, setSongToRemove] = useState<{ id: number; name: string } | null>(null);
+  const [collabToRemove, setCollabToRemove] = useState<{ id: number; name: string } | null>(null);
+  const [removingAction, setRemovingAction] = useState(false);
+
+  const removeSong = async () => {
+    if (!songToRemove) return;
+    setRemovingAction(true);
     try {
-      await api.delete(`/playlists/${id}/songs/${songId}`);
+      await api.delete(`/playlists/${id}/songs/${songToRemove.id}`);
       toast({ title: 'Song removed' });
+      setSongToRemove(null);
       fetchPlaylist();
     } catch {
       toast({ title: 'Error', description: 'Could not remove song', variant: 'destructive' });
+    } finally {
+      setRemovingAction(false);
     }
   };
 
@@ -183,14 +193,18 @@ export function PlaylistDetailPage() {
     }
   };
 
-  const removeCollaborator = async (userId: number, username: string) => {
-    if (!confirm(`Remove ${username} as collaborator?`)) return;
+  const removeCollaborator = async () => {
+    if (!collabToRemove) return;
+    setRemovingAction(true);
     try {
-      await api.delete(`/playlists/${id}/collaborators/${userId}`);
-      toast({ title: `${username} removed` });
+      await api.delete(`/playlists/${id}/collaborators/${collabToRemove.id}`);
+      toast({ title: `${collabToRemove.name} removed` });
+      setCollabToRemove(null);
       fetchPlaylist();
     } catch {
       toast({ title: 'Error', description: 'Could not remove collaborator', variant: 'destructive' });
+    } finally {
+      setRemovingAction(false);
     }
   };
 
@@ -347,7 +361,7 @@ export function PlaylistDetailPage() {
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 hover:text-destructive"
-                      onClick={() => removeSong(ps.song_id, ps.song.song_name)}
+                      onClick={() => setSongToRemove({ id: ps.song_id, name: ps.song.song_name })}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -421,7 +435,7 @@ export function PlaylistDetailPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeCollaborator(collab.user_id, collab.username)}
+                        onClick={() => setCollabToRemove({ id: collab.user_id, name: collab.username })}
                       >
                         <UserMinus className="h-4 w-4" />
                       </Button>
@@ -433,6 +447,30 @@ export function PlaylistDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Remove Song confirmation dialog */}
+      <AlertDialog
+        open={!!songToRemove}
+        onOpenChange={(open) => !open && setSongToRemove(null)}
+        title="Remove Song"
+        description={`Remove "${songToRemove?.name}" from this playlist?`}
+        confirmLabel="Remove"
+        confirmVariant="destructive"
+        loading={removingAction}
+        onConfirm={removeSong}
+      />
+
+      {/* Remove Collaborator confirmation dialog */}
+      <AlertDialog
+        open={!!collabToRemove}
+        onOpenChange={(open) => !open && setCollabToRemove(null)}
+        title="Remove Collaborator"
+        description={`Remove ${collabToRemove?.name} as a collaborator? They will no longer be able to edit this playlist.`}
+        confirmLabel="Remove"
+        confirmVariant="destructive"
+        loading={removingAction}
+        onConfirm={removeCollaborator}
+      />
     </div>
   );
 }

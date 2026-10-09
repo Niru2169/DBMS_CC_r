@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 import { formatDuration, formatDate } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -64,9 +65,9 @@ export function ArtistsPage() {
           onChange={(e) => setQuery(e.target.value)}
           id="artist-search-input"
         />
-        <button type="submit" className="flex items-center justify-center h-10 w-10 rounded-md border border-input bg-background hover:bg-accent transition-colors flex-shrink-0">
+        <Button type="submit" size="icon" variant="outline">
           <Search className="h-4 w-4" />
-        </button>
+        </Button>
       </form>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
