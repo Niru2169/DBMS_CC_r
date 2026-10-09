@@ -1,8 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # =============================================================================
 # setup-vm.sh — MusicLib VM Setup Script (Ubuntu 22.04 / 24.04)
 # Run as a non-root user with sudo privileges.
 # Usage: bash setup-vm.sh [--repo <git-repo-url>]
+#        bash setup-vm.sh --skip-clone   (if repo is already cloned)
+# NOTE:  Must be run with 'bash', NOT 'sh'
 # =============================================================================
 
 set -euo pipefail
@@ -15,9 +17,11 @@ error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
 
 # ── Parse args ───────────────────────────────────────────────────────────────
 REPO_URL=""
+SKIP_CLONE=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo) REPO_URL="$2"; shift 2 ;;
+    --skip-clone) SKIP_CLONE=true; shift ;;
     *) error "Unknown argument: $1" ;;
   esac
 done
@@ -52,13 +56,22 @@ info "Configuring Docker for non-root access..."
 sudo usermod -aG docker "$USER"
 
 # ── 4. Clone repository ───────────────────────────────────────────────────────
-APP_DIR="$HOME/MusicLib"
-if [[ -n "$REPO_URL" ]]; then
+# If already inside the repo (script run from project dir), use current dir
+if [[ -f "$(pwd)/docker-compose.yml" && -f "$(pwd)/.env.example" ]]; then
+  APP_DIR="$(pwd)"
+  info "Detected project in current directory: $APP_DIR"
+elif [[ -n "$REPO_URL" && "$SKIP_CLONE" == false ]]; then
+  APP_DIR="$HOME/MusicLib"
   info "Cloning repository from $REPO_URL..."
   git clone "$REPO_URL" "$APP_DIR"
+elif [[ "$SKIP_CLONE" == true ]]; then
+  APP_DIR="$(pwd)"
+  info "Skipping clone, using current directory: $APP_DIR"
 else
-  warn "No --repo URL provided. Skipping clone."
-  warn "Manually place the project at: $APP_DIR"
+  APP_DIR="$HOME/MusicLib"
+  warn "No --repo URL provided and not in project directory."
+  warn "Place the project at: $APP_DIR and re-run."
+  exit 1
 fi
 
 # ── 5. Configure environment variables ───────────────────────────────────────
