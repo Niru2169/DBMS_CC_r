@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# =============================================================================
+# setup-vm.sh — MusicLib VM Setup Script (Ubuntu 22.04 / 24.04)
+# Run as a non-root user with sudo privileges.
+# Usage: bash setup-vm.sh [--repo <git-repo-url>]
+# =============================================================================
+
+set -euo pipefail
+
+# ── Colours ──────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+info()    { echo -e "${GREEN}[INFO]${NC}  $*"; }
+warn()    { echo -e "${YELLOW}[WARN]${NC}  $*"; }
+error()   { echo -e "${RED}[ERROR]${NC} $*" >&2; exit 1; }
+
+# ── Parse args ───────────────────────────────────────────────────────────────
+REPO_URL=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repo) REPO_URL="$2"; shift 2 ;;
+    *) error "Unknown argument: $1" ;;
+  esac
+done
+
+# ── 1. System update ─────────────────────────────────────────────────────────
+info "Updating system packages..."
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install -y ca-certificates curl gnupg git ufw
+
+# ── 2. Install Docker Engine ──────────────────────────────────────────────────
+info "Installing Docker Engine..."
+sudo install -m 0755 -d /etc/apt/keyrings
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update -y
+sudo apt-get install -y \
+  docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+# ── 3. Docker post-install (non-root access) ──────────────────────────────────
+info "Configuring Docker for non-root access..."
+sudo usermod -aG docker "$USER"
+
+# ── 4. Clone repository ───────────────────────────────────────────────────────
+APP_DIR="$HOME/MusicLib"
+if [[ -n "$REPO_URL" ]]; then
+  info "Cloning repository from $REPO_URL..."
+  git clone "$REPO_URL" "$APP_DIR"
+else
+  warn "No --repo URL provided. Skipping clone."
+  warn "Manually place the project at: $APP_DIR"
+fi
+
+# ── 5. Configure environment variables ───────────────────────────────────────
+if [[ -d "$APP_DIR" ]]; then
+  info "Configuring environment..."
+  cd "$APP_DIR"
+
+  if [[ ! -f .env ]]; then
+    cp .env.example .env
+  fi
+
+  # Generate cryptographically secure secrets
+  JWT_SECRET=$(openssl rand -hex 32)
+  DB_PASS=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9' | head -c 24)
+
+  sed -i "s|^JWT_SECRET=.*|JWT_SECRET=${JWT_SECRET}|" .env
+  sed -i "s|^MYSQL_ROOT_PASSWORD=.*|MYSQL_ROOT_PASSWORD=${DB_PASS}|" .env
+  sed -i "s|^DATABASE_URL=.*|DATABASE_URL=mysql://root:${DB_PASS}@db:3306/music_library|" .env
+
+  # Auto-detect public IP (GCP metadata server → AWS → fallback)
+  PUBLIC_IP=$(curl -sf --max-time 3 \
+    http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/externalIp \
+    -H "Metadata-Flavor: Google" 2>/dev/null \
+    || curl -sf --max-time 3 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null \
+    || hostname -I | awk '{print $1}')
+
+  sed -i "s|^VITE_API_URL=.*|VITE_API_URL=http://${PUBLIC_IP}:3001|" .env
+
+  info "Set VITE_API_URL=http://${PUBLIC_IP}:3001"
+  info "Credentials written to: $APP_DIR/.env"
+fi
+
+# ── 6. Configure UFW firewall ─────────────────────────────────────────────────
+info "Configuring UFW firewall..."
+sudo ufw --force reset
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp        # SSH — never block this!
+sudo ufw allow 5173/tcp      # Frontend (Vite dev server)
+sudo ufw allow 3001/tcp      # Backend API
+# Uncomment if you add an Nginx reverse proxy later:
+# sudo ufw allow 80/tcp
+# sudo ufw allow 443/tcp
+sudo ufw --force enable
+sudo ufw status verbose
+
+# ── 7. Start the application ──────────────────────────────────────────────────
+if [[ -d "$APP_DIR" ]]; then
+  info "Starting MusicLib with Docker Compose..."
+  cd "$APP_DIR"
+  sg docker -c "docker compose up -d --build"
+
+  info "Waiting for containers to be healthy (~30s)..."
+  sleep 30
+  sg docker -c "docker compose ps"
+fi
+
+# ── 8. Done ───────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${GREEN}============================================${NC}"
+echo -e "${GREEN}  MusicLib is up!${NC}"
+echo -e "${GREEN}============================================${NC}"
+echo ""
+echo -e "  Frontend : ${YELLOW}http://${PUBLIC_IP:-<VM_IP>}:5173${NC}"
+echo -e "  Backend  : ${YELLOW}http://${PUBLIC_IP:-<VM_IP>}:3001/health${NC}"
+echo ""
+echo -e "  Demo login — Username: alice  Password: password123"
+echo ""
+warn "IMPORTANT: Credentials are saved to $APP_DIR/.env"
+warn "Never commit this file to Git!"
+echo ""
+info "Logs:    docker compose logs -f"
+info "Stop:    docker compose down"
+info "Update:  git pull && docker compose up -d --build"
