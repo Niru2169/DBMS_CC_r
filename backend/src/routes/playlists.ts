@@ -126,12 +126,12 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
       return;
     }
 
-    // Access: owner, collaborator, or playlist is shared
+    // Access: owner, collaborator, or playlist is publicly shared
     const userId = req.user!.userId;
     const isOwner = playlist.created_by_user_id === userId;
     const isCollaborator = playlist.collaborators.some((c) => c.user_id === userId);
 
-    if (!isOwner && !isCollaborator) {
+    if (!isOwner && !isCollaborator && !playlist.is_shared) {
       res.status(403).json({ error: 'Access denied' });
       return;
     }
@@ -179,6 +179,7 @@ router.put('/:id', authenticate, async (req: Request, res: Response, next: NextF
         ...(cover_art_url !== undefined && { cover_art_url }),
         ...(release_type !== undefined && { release_type: release_type ? (release_type as ReleaseType) : null }),
         ...(is_shared !== undefined && { is_shared: Boolean(is_shared) }),
+        last_updated: new Date(), // explicitly set so @updatedAt triggers on partial updates
       },
       include: {
         creator: { select: { user_id: true, username: true } },

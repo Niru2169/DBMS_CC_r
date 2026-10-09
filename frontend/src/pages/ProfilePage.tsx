@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/lib/utils';
@@ -151,9 +152,9 @@ export function ProfilePage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex gap-3 flex-wrap">
-          <a href="/playlists" className="text-sm text-primary hover:underline font-medium">→ Manage Playlists</a>
-          <a href="/users" className="text-sm text-primary hover:underline font-medium">→ Find Users to Follow</a>
-          <a href="/artists" className="text-sm text-primary hover:underline font-medium">→ Browse Artists</a>
+          <Link to="/playlists" className="text-sm text-primary hover:underline font-medium">→ Manage Playlists</Link>
+          <Link to="/users" className="text-sm text-primary hover:underline font-medium">→ Find Users to Follow</Link>
+          <Link to="/artists" className="text-sm text-primary hover:underline font-medium">→ Browse Artists</Link>
         </CardContent>
       </Card>
     </div>

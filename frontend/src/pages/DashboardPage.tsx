@@ -29,6 +29,7 @@ interface FollowedUser {
 export function DashboardPage() {
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [totalPlaylists, setTotalPlaylists] = useState<number>(0);
   const [following, setFollowing] = useState<FollowedUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +38,7 @@ export function DashboardPage() {
       api.get('/playlists'),
       api.get('/users/me/following'),
     ]).then(([pRes, fRes]) => {
+      setTotalPlaylists(pRes.data.length);
       setPlaylists(pRes.data.slice(0, 3));
       setFollowing(fRes.data.slice(0, 5));
     }).finally(() => setLoading(false));
@@ -63,9 +65,9 @@ export function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Playlists', value: playlists.length + '+', icon: ListMusic, color: 'text-violet-400' },
-          { label: 'Following', value: following.length, icon: Users, color: 'text-blue-400' },
-          { label: 'Account Type', value: user?.is_artist ? 'Artist' : 'Listener', icon: user?.is_artist ? Mic2 : Music2, color: 'text-emerald-400' },
+          { label: 'Playlists', value: totalPlaylists, icon: ListMusic, color: 'text-primary' },
+          { label: 'Following', value: following.length, icon: Users, color: 'text-accent' },
+          { label: 'Account Type', value: user?.is_artist ? 'Artist' : 'Listener', icon: user?.is_artist ? Mic2 : Music2, color: 'text-primary' },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label} className="hover:shadow-md transition-shadow">
             <CardContent className="flex items-center gap-4 pt-6">

@@ -274,52 +274,54 @@ export function PlaylistDetailPage() {
             <CardTitle className="text-lg flex items-center gap-2">
               <Music2 className="h-5 w-5" /> Songs
             </CardTitle>
-            <Dialog open={songDialogOpen} onOpenChange={setSongDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-1">
-                  <Plus className="h-3 w-3" /> Add Song
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add a Song</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 mt-2">
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Search songs…"
-                      value={songSearch}
-                      onChange={(e) => setSongSearch(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && searchSongs()}
-                    />
-                    <Button size="icon" variant="outline" onClick={searchSongs} disabled={searching}>
-                      <Search className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {songResults.map((s) => (
-                      <div key={s.song_id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
-                        <div>
-                          <p className="text-sm font-medium">{s.song_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {s.artists[0]?.artist.name} · {formatDuration(s.duration)}
-                          </p>
+            {(isOwner || playlist.collaborators.some(c => c.user.user_id === user?.user_id)) && (
+              <Dialog open={songDialogOpen} onOpenChange={setSongDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1">
+                    <Plus className="h-3 w-3" /> Add Song
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add a Song</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 mt-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Search songs…"
+                        value={songSearch}
+                        onChange={(e) => setSongSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && searchSongs()}
+                      />
+                      <Button size="icon" variant="outline" onClick={searchSongs} disabled={searching}>
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {songResults.map((s) => (
+                        <div key={s.song_id} className="flex items-center justify-between p-2 rounded-md hover:bg-accent">
+                          <div>
+                            <p className="text-sm font-medium">{s.song_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {s.artists[0]?.artist.name} · {formatDuration(s.duration)}
+                            </p>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={() => addSong(s.song_id, s.song_name)}>
+                            Add
+                          </Button>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => addSong(s.song_id, s.song_name)}>
-                          Add
-                        </Button>
-                      </div>
-                    ))}
-                    {songResults.length === 0 && songSearch && !searching && (
-                      <p className="text-sm text-muted-foreground text-center py-4">No songs found. Try a different search.</p>
-                    )}
-                    {!songSearch && (
-                      <p className="text-sm text-muted-foreground text-center py-4">Search for a song by name and press Enter.</p>
-                    )}
+                      ))}
+                      {songResults.length === 0 && songSearch && !searching && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No songs found. Try a different search.</p>
+                      )}
+                      {!songSearch && (
+                        <p className="text-sm text-muted-foreground text-center py-4">Search for a song by name and press Enter.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0">
