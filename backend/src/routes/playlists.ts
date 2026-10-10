@@ -18,6 +18,25 @@ async function canMutatePlaylist(playlistId: number, userId: number): Promise<bo
   return playlist.created_by_user_id === userId || playlist.collaborators.length > 0;
 }
 
+// Helper: Recalculates and updates the total duration of a playlist
+async function recalculatePlaylistDuration(playlistId: number): Promise<number> {
+  const result: Array<{ total_duration: bigint | number | null }> = await prisma.$queryRaw`
+    SELECT COALESCE(SUM(s.duration), 0) AS total_duration
+    FROM Playlist_Song ps
+    JOIN Song s ON ps.song_id = s.song_id
+    WHERE ps.playlist_id = ${playlistId}
+  `;
+  const total = Number(result[0]?.total_duration ?? 0);
+  await prisma.playlist.update({
+    where: { playlist_id: playlistId },
+    data: { duration: total, last_updated: new Date() },
+  });
+  return total;
+}
+
+// The duplicate functions have been removed to resolve TypeScript compilation errors.
+// The logic now relies on the single, efficient raw SQL implementation.
+
 // GET /api/playlists — list playlists user owns OR collaborates on
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -136,6 +155,10 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
       return;
     }
 
+    const newDuration = await recalculatePlaylistDuration(playlistId);
+    // Ensure the full playlist object is returned, not just the duration
+    recalculatePlaylistDuration(playlistId);
+    playlist.duration = newDuration; // <--- ASSIGN UPDATED DURATION
     res.json(playlist);
   } catch (err) {
     next(err);
@@ -264,16 +287,7 @@ router.post('/:id/songs', authenticate, async (req: Request, res: Response, next
       },
     });
 
-    // Recalculate duration
-    const songs = await prisma.playlist_Song.findMany({
-      where: { playlist_id: playlistId },
-      include: { song: { select: { duration: true } } },
-    });
-    const totalDuration = songs.reduce((acc, ps) => acc + ps.song.duration, 0);
-    await prisma.playlist.update({
-      where: { playlist_id: playlistId },
-      data: { duration: totalDuration },
-    });
+    await recalculatePlaylistDuration(playlistId);
 
     res.status(201).json({ message: 'Song added to playlist' });
   } catch (err) {
@@ -302,16 +316,7 @@ router.delete('/:id/songs/:songId', authenticate, async (req: Request, res: Resp
       where: { playlist_id_song_id: { playlist_id: playlistId, song_id: songId } },
     });
 
-    // Recalculate duration
-    const songs = await prisma.playlist_Song.findMany({
-      where: { playlist_id: playlistId },
-      include: { song: { select: { duration: true } } },
-    });
-    const totalDuration = songs.reduce((acc, ps) => acc + ps.song.duration, 0);
-    await prisma.playlist.update({
-      where: { playlist_id: playlistId },
-      data: { duration: totalDuration },
-    });
+    await recalculatePlaylistDuration(playlistId);
 
     res.status(204).send();
   } catch (err) {
