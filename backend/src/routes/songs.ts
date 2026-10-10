@@ -79,9 +79,14 @@ router.post('/:id/listen', authenticate, async (req: Request, res: Response, nex
     const userId = req.user!.userId;
     const { listening_time } = req.body; // seconds listened (optional)
 
-    if (isNaN(songId)) {
-      res.status(400).json({ error: 'Invalid song ID' });
-      return;
+    // If listening_time is not provided or <= 0, query the song's duration as default
+    let finalListeningTime = listening_time;
+    if (!finalListeningTime || typeof finalListeningTime !== 'number' || finalListeningTime <= 0) {
+      const song = await prisma.song.findUnique({
+        where: { song_id: songId },
+        select: { duration: true }
+      });
+      finalListeningTime = song?.duration || 0;
     }
 
     // Increment listen_count and log activity in a transaction
@@ -94,7 +99,7 @@ router.post('/:id/listen', authenticate, async (req: Request, res: Response, nex
         data: {
           user_id: userId,
           song_id: songId,
-          listening_time: listening_time ?? 0,
+          listening_time: Math.round(finalListeningTime),
         },
       }),
     ]);

@@ -70,12 +70,13 @@ export function SongsPage() {
 
   const handleGenreClick = (g: string) => setGenre(genre === g ? '' : g);
 
-  const recordListen = async (songId: number) => {
+  const recordListen = async (song: Song) => {
     try {
-      await api.post(`/songs/${songId}/listen`, { listening_time: 0 });
-      // Optimistically update count in UI
+      // Send the full song duration or a calculated playback time (e.g., Math.round(song.duration))
+      const timeListened = song.duration > 0 ? song.duration : 180;
+      await api.post(`/songs/${song.song_id}/listen`, { listening_time: timeListened });
       setSongs((prev) =>
-        prev.map((s) => s.song_id === songId ? { ...s, listen_count: s.listen_count + 1 } : s)
+        prev.map((s) => s.song_id === song.song_id ? { ...s, listen_count: s.listen_count + 1 } : s)
       );
     } catch { /* silently ignore */ }
   };
@@ -159,7 +160,7 @@ export function SongsPage() {
             <div
               key={song.song_id}
               className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-0 items-center px-4 py-3 hover:bg-accent/40 transition-colors border-b border-border last:border-0 group cursor-pointer"
-              onClick={() => recordListen(song.song_id)}
+              onClick={() => recordListen(song)}
               title="Click to count as listened"
             >
               <span className="w-8 text-sm text-muted-foreground">{idx + 1}</span>

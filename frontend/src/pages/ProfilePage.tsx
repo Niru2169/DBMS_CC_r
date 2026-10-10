@@ -28,6 +28,11 @@ interface UserStats {
     is_band: boolean;
     production_house?: { name: string; type: string } | null;
   } | null;
+  _count?: {
+    followers: number;
+    following: number;
+    playlists: number;
+  };
 }
 
 export function ProfilePage() {
@@ -83,6 +88,20 @@ export function ProfilePage() {
                 {stats.last_login && (
                   <span>Last seen {formatDate(stats.last_login)}</span>
                 )}
+              </div>
+              <div className="flex items-center gap-4 mt-3 text-sm">
+                <div className="flex items-center gap-1 font-medium">
+                  <span className="text-foreground font-bold">{stats._count?.followers ?? 0}</span>
+                  <span className="text-muted-foreground">Followers</span>
+                </div>
+                <div className="flex items-center gap-1 font-medium">
+                  <span className="text-foreground font-bold">{stats._count?.following ?? following.length}</span>
+                  <span className="text-muted-foreground">Following</span>
+                </div>
+                <div className="flex items-center gap-1 font-medium">
+                  <span className="text-foreground font-bold">{stats._count?.playlists ?? 0}</span>
+                  <span className="text-muted-foreground">Playlists</span>
+                </div>
               </div>
             </div>
           </div>

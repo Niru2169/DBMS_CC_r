@@ -126,7 +126,16 @@ router.get('/me', authenticate, async (req: Request, res: Response, next: NextFu
   try {
     const user = await prisma.user.findUnique({
       where: { user_id: req.user!.userId },
-      include: { artist: { include: { production_house: true } } },
+      include: {
+        artist: { include: { production_house: true } },
+        _count: {
+          select: {
+            followers: true,
+            following: true,
+            playlists: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -141,6 +150,7 @@ router.get('/me', authenticate, async (req: Request, res: Response, next: NextFu
       created_at: user.created_at,
       last_login: user.last_login,
       artist: user.artist,
+      _count: user._count,
     });
   } catch (err) {
     next(err);
