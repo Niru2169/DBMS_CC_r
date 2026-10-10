@@ -27,13 +27,11 @@ interface Playlist {
   creator: { user_id: number };
 }
 
-// All unique genres from the seed data
-const GENRE_OPTIONS = ['Pop', 'Rock', 'Hip-Hop', 'Jazz', 'Classical', 'Electronic', 'R&B', 'Country', 'Folk', 'Metal'];
-
 export function SongsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [songs, setSongs] = useState<Song[]>([]);
+  const [availableGenres, setAvailableGenres] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [genre, setGenre] = useState('');
   const [loading, setLoading] = useState(true);
@@ -67,6 +65,13 @@ export function SongsPage() {
       setPlaylists(r.data.filter((p: Playlist) => p.creator.user_id === user?.user_id))
     );
   }, [user]);
+
+  // Fetch dynamic genres
+  useEffect(() => {
+    api.get('/songs/genres')
+      .then((res) => setAvailableGenres(res.data))
+      .catch(() => setAvailableGenres(['Pop', 'Rock', 'Electronic', 'Jazz']));
+  }, []);
 
   const handleGenreClick = (g: string) => setGenre(genre === g ? '' : g);
 
@@ -123,7 +128,7 @@ export function SongsPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {GENRE_OPTIONS.map((g) => (
+          {availableGenres.map((g) => (
             <Badge
               key={g}
               variant={genre === g ? 'default' : 'outline'}

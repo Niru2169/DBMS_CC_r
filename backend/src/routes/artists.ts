@@ -21,6 +21,9 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
             song: true,
           },
         },
+        _count: {
+          select: { songs: true },
+        },
       },
       orderBy: { name: 'asc' },
       take: 50,
@@ -51,7 +54,10 @@ router.get('/:userId', authenticate, async (req: Request, res: Response, next: N
             song: true,
           },
           where: { is_primary: true },
-          take: 20,
+          take: 50,
+        },
+        _count: {
+          select: { songs: true },
         },
       },
     });

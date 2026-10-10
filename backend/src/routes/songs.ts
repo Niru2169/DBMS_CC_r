@@ -13,8 +13,12 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
       where: {
         is_published: true,
         ...(q && { song_name: { contains: String(q) } }),
-        // Genre is stored as a JSON array — filter using string_contains on serialized value
-        ...(genre && { genres: { string_contains: String(genre) } }),
+        // Filter exact JSON array membership
+        ...(genre && {
+          genres: {
+            array_contains: String(genre),
+          },
+        }),
       },
       include: {
         artists: {
@@ -29,6 +33,31 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
     });
 
     res.json(songs);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/songs/genres — dynamically list all unique genres in catalog
+router.get('/genres', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const songs = await prisma.song.findMany({
+      where: { is_published: true },
+      select: { genres: true },
+    });
+
+    const genreSet = new Set<string>();
+    for (const s of songs) {
+      if (Array.isArray(s.genres)) {
+        s.genres.forEach((g) => {
+          if (typeof g === 'string' && g.trim()) {
+            genreSet.add(g.trim());
+          }
+        });
+      }
+    }
+
+    res.json(Array.from(genreSet).sort());
   } catch (err) {
     next(err);
   }

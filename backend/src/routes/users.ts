@@ -30,6 +30,46 @@ router.get('/', authenticate, async (req: Request, res: Response, next: NextFunc
   }
 });
 
+// GET /api/users/me/stats — user summary analytics
+router.get('/me/stats', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+
+    const [userCounts, listeningAggregates] = await Promise.all([
+      prisma.user.findUnique({
+        where: { user_id: userId },
+        select: {
+          _count: {
+            select: {
+              playlists: true,
+              following: true,
+              followers: true,
+              listening_activity: true,
+            },
+          },
+        },
+      }),
+      prisma.listening_Activity.aggregate({
+        where: { user_id: userId },
+        _sum: { listening_time: true },
+        _count: { activity_id: true },
+      }),
+    ]);
+
+    const totalListeningSeconds = listeningAggregates._sum.listening_time || 0;
+
+    res.json({
+      playlistCount: userCounts?._count.playlists || 0,
+      followingCount: userCounts?._count.following || 0,
+      followersCount: userCounts?._count.followers || 0,
+      totalListens: listeningAggregates._count.activity_id || 0,
+      totalListeningMinutes: Math.round(totalListeningSeconds / 60),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/users/me/following  ← must come before /:id
 router.get('/me/following', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {

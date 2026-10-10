@@ -26,19 +26,28 @@ interface FollowedUser {
   artist?: { name: string } | null;
 }
 
+interface UserSummaryStats {
+  playlistCount: number;
+  followingCount: number;
+  followersCount: number;
+  totalListens: number;
+  totalListeningMinutes: number;
+}
+
 export function DashboardPage() {
   const { user } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [totalPlaylists, setTotalPlaylists] = useState<number>(0);
+  const [stats, setStats] = useState<UserSummaryStats | null>(null);
   const [following, setFollowing] = useState<FollowedUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
+      api.get('/users/me/stats'),
       api.get('/playlists'),
       api.get('/users/me/following'),
-    ]).then(([pRes, fRes]) => {
-      setTotalPlaylists(pRes.data.length);
+    ]).then(([sRes, pRes, fRes]) => {
+      setStats(sRes.data);
       setPlaylists(pRes.data.slice(0, 3));
       setFollowing(fRes.data.slice(0, 5));
     }).finally(() => setLoading(false));
@@ -65,8 +74,10 @@ export function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Playlists', value: totalPlaylists, icon: ListMusic, color: 'text-primary' },
-          { label: 'Following', value: following.length, icon: Users, color: 'text-accent' },
+          { label: 'Playlists', value: stats?.playlistCount ?? 0, icon: ListMusic, color: 'text-primary' },
+          { label: 'Following', value: stats?.followingCount ?? 0, icon: Users, color: 'text-accent' },
+          { label: 'Total Listens', value: stats?.totalListens ?? 0, icon: Music2, color: 'text-primary' },
+          { label: 'Total Listening Time', value: `${stats?.totalListeningMinutes ?? 0} mins`, icon: Mic2, color: 'text-accent' },
           { label: 'Account Type', value: user?.is_artist ? 'Artist' : 'Listener', icon: user?.is_artist ? Mic2 : Music2, color: 'text-primary' },
         ].map(({ label, value, icon: Icon, color }) => (
           <Card key={label} className="hover:shadow-md transition-shadow">

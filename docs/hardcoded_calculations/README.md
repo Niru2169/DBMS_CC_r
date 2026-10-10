@@ -23,7 +23,7 @@ Dedicated task specifications with self-contained context, precise file links, s
 
 - [x] [TASK-01_listening_time_tracking.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-01_listening_time_tracking.md)
 - [x] [TASK-02_profile_followers_aggregates.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-02_profile_followers_aggregates.md)
-- [ ] [TASK-03_artist_song_counts_aggregation.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-03_artist_song_counts_aggregation.md)
+- [x] [TASK-03_artist_song_counts_aggregation.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-03_artist_song_counts_aggregation.md)
 - [x] [TASK-04_playlist_duration_aggregation.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-04_playlist_duration_aggregation.md)
-- [ ] [TASK-05_dashboard_user_analytics.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-05_dashboard_user_analytics.md)
-- [ ] [TASK-06_genre_filtering_and_indexing.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-06_genre_filtering_and_indexing.md)
+- [x] [TASK-05_dashboard_user_analytics.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-05_dashboard_user_analytics.md)
+- [x] [TASK-06_genre_filtering_and_indexing.md](file:///d:/ArchivedLargeStuff/Documents/S5_Projects/DBMS_CC_retry/docs/hardcoded_calculations/TASK-06_genre_filtering_and_indexing.md)

@@ -29,6 +29,7 @@ interface Artist {
   production_house: { name: string; type: string } | null;
   user: { user_id: number; username: string; created_at: string };
   songs: ArtistSong[];
+  _count?: { songs: number };
 }
 
 export function ArtistsPage() {
@@ -98,10 +99,14 @@ export function ArtistsPage() {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                       {artist.country && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{artist.country}</span>}
                       {artist.production_house && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{artist.production_house.name}</span>}
+                      <span className="flex items-center gap-1">
+                        <Music2 className="h-3 w-3" />
+                        {artist._count?.songs ?? artist.songs?.length ?? 0} songs
+                      </span>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        @{artist.user?.username} · {artist._count?.songs ?? artist.songs?.length ?? 0} songs
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      @{artist.user?.username} · {artist.songs?.length || 0} songs
-                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -149,7 +154,7 @@ export function ArtistsPage() {
 
                 <div>
                   <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                    <Music2 className="h-4 w-4" /> Songs ({selected.songs?.length || 0})
+                    <Music2 className="h-4 w-4" /> Songs ({selected._count?.songs ?? selected.songs?.length ?? 0})
                   </h3>
                   <div className="space-y-2">
                     {!selected.songs || selected.songs.length === 0 ? (
